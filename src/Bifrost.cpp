@@ -1,6 +1,8 @@
 #include "CompactedDBG.hpp"
 #include "ColoredCDBG.hpp"
 
+#include <chrono>
+
 using namespace std;
 
 void PrintVersion() {
@@ -690,9 +692,9 @@ int main(int argc, char **argv){
 
                         lopt.k = cdbg1.getK();
                         lopt.g = cdbg1.getG();
-
+                        auto a = chrono::high_resolution_clock::now();
                         CompactedDBG<> cdbg2(lopt.k, lopt.g);
-
+                        
                         if (success) success = cdbg2.build(lopt);
                         if (success) {
 
@@ -709,8 +711,12 @@ int main(int argc, char **argv){
                             }
 
                             if (success) success = cdbg_a.simplify(lopt.deleteIsolated, lopt.clipTips, lopt.verbose);
+                            auto b = chrono::high_resolution_clock::now();
                             if (success) success = cdbg_a.write(lopt.prefixFilenameOut, lopt.nb_threads, lopt.outputGFA,
                                                                 lopt.outputFASTA, lopt.outputBFG, lopt.writeIndexFile, lopt.compressOutput, lopt.verbose);
+                            auto c = chrono::high_resolution_clock::now();
+                            std::cerr << "Insert time ns: " << std::chrono::duration_cast<std::chrono::nanoseconds>(b - a).count() << std::endl;
+                            std::cerr << "Serialization time ns: " << std::chrono::duration_cast<std::chrono::nanoseconds>(c - b).count() << std::endl;
                         }
                     }
                 }
@@ -752,7 +758,7 @@ int main(int argc, char **argv){
                     else success = cdbg.read(opt.filename_graph_in, opt.filename_index_in, opt.nb_threads, opt.verbose);
 
                     if (success) {
-
+                        auto a = chrono::high_resolution_clock::now();
                         if (opt.min_ratio_kmers_search == 0.0) {
 
                             success = cdbg.search(  opt.filename_query_in, opt.prefixFilenameOut, opt.get_ratio_found_km,
@@ -763,6 +769,8 @@ int main(int argc, char **argv){
                             success = cdbg.searchMinRatioKmer(  opt.filename_query_in, opt.prefixFilenameOut, opt.min_ratio_kmers_search,
                                                                 opt.inexact_search, opt.files_as_queries, opt.nb_threads, opt.verbose);
                         }
+                        auto b = chrono::high_resolution_clock::now();
+                        std::cerr << "Query time ns: " << std::chrono::duration_cast<std::chrono::nanoseconds>(b - a).count() << std::endl;
                     }
                 }
             }
